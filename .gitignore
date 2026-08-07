@@ -8,7 +8,7 @@
 .deps/
 modules/
 
-# Autotools / generated build files
+# Autotools / phpize generated
 autom4te.cache/
 aclocal.m4
 compile
@@ -30,7 +30,7 @@ Makefile.objects
 missing
 run-tests.php
 
-# PHPT generated artifacts (root tests directory only)
+# PHPT generated artifacts at tests root
 /tests/*.diff
 /tests/*.exp
 /tests/*.log
@@ -40,7 +40,7 @@ run-tests.php
 /tests/*.sh
 /tests/*.tmp
 
-# IDE / editor
+# Editor / IDE
 .vscode/
 .idea/
 *.swp

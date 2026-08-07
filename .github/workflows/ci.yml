@@ -10,37 +10,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version:
-          - '7.4'
-          - '8.0'
-          - '8.1'
-          - '8.2'
-          - '8.3'
-          - '8.4'
-
-    name: PHP ${{ matrix.php-version }}
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
-          tools: phpize
+          php-version: ${{ matrix.php }}
+          tools: phpize, php-config
           coverage: none
 
-      - name: Configure
+      - name: Build
         run: |
           phpize
           ./configure --enable-pseudoglobals
-
-      - name: Build
-        run: make -j"$(nproc)"
+          make -j"$(nproc)"
 
       - name: Test
-        env:
-          NO_INTERACTION: '1'
-          REPORT_EXIT_STATUS: '1'
-        run: make test TESTS="-q"
+        run: make test

@@ -32,10 +32,7 @@ PHP_INI_END()
 
 int pseudoglobals_config_minit(int module_number)
 {
-    return zend_register_ini_entries(
-        ini_entries,
-        module_number
-    );
+    return zend_register_ini_entries(ini_entries, module_number);
 }
 
 void pseudoglobals_config_mshutdown(int module_number)

@@ -3,38 +3,11 @@
 #endif
 
 #include "php.h"
+
+#include "../include/php_pseudoglobals.h"
 #include "pseudoglobals_internal.h"
 
-int pseudoglobals_registry_init(void)
-{
-    zend_hash_init(
-        &PGLOB(registered),
-        8,
-        NULL,
-        NULL,
-        1);
-
-    return SUCCESS;
-}
-
-void pseudoglobals_registry_shutdown(void)
-{
-    zend_hash_destroy(&PGLOB(registered));
-}
-
-zend_bool pseudoglobals_is_registered(zend_string *name)
-{
-    return zend_hash_exists(&PGLOB(registered), name);
-}
-
-uint32_t pseudoglobals_registered_count(void)
-{
-    return zend_hash_num_elements(&PGLOB(registered));
-}
-
-static int pseudoglobals_register_name(
-    const char *name,
-    size_t len)
+static int pseudoglobals_register_name(const char *name, size_t len)
 {
     zend_string *key;
 
@@ -58,18 +31,20 @@ static int pseudoglobals_register_name(
             E_WARNING,
             "Ignoring pseudoglobal \"%.*s\": name must begin with '_'",
             (int) len,
-            name);
+            name
+        );
         return SUCCESS;
     }
 
     key = zend_string_init(name, len, 1);
 
-    if (pseudoglobals_is_registered(key)) {
+    if (zend_hash_exists(&PGLOB(registered), key)) {
         php_error_docref(
             NULL,
             E_WARNING,
             "Ignoring duplicate pseudoglobal \"%s\"",
-            ZSTR_VAL(key));
+            ZSTR_VAL(key)
+        );
         zend_string_release(key);
         return SUCCESS;
     }
@@ -78,8 +53,9 @@ static int pseudoglobals_register_name(
         php_error_docref(
             NULL,
             E_WARNING,
-            "Unable to register pseudoglobal \"%s\"",
-            ZSTR_VAL(key));
+            "Unable to add pseudoglobal \"%s\" to registry",
+            ZSTR_VAL(key)
+        );
         zend_string_release(key);
         return FAILURE;
     }
@@ -87,12 +63,14 @@ static int pseudoglobals_register_name(
     if (zend_register_auto_global(
             key,
             1,
-            pseudoglobals_auto_global_callback) == FAILURE) {
+            pseudoglobals_callback
+        ) == FAILURE) {
         php_error_docref(
             NULL,
             E_WARNING,
             "Zend rejected pseudoglobal \"%s\"",
-            ZSTR_VAL(key));
+            ZSTR_VAL(key)
+        );
         zend_hash_del(&PGLOB(registered), key);
         zend_string_release(key);
         return FAILURE;
@@ -102,13 +80,12 @@ static int pseudoglobals_register_name(
     return SUCCESS;
 }
 
-int pseudoglobals_register_configured(void)
+static int pseudoglobals_register_configured(void)
 {
     const char *start;
     const char *p;
 
-    if (PGLOB(register_names) == NULL ||
-        *PGLOB(register_names) == '\0') {
+    if (PGLOB(register_names) == NULL || *PGLOB(register_names) == '\0') {
         return SUCCESS;
     }
 
@@ -118,7 +95,8 @@ int pseudoglobals_register_configured(void)
         if (*p == ',' || *p == '\0') {
             if (pseudoglobals_register_name(
                     start,
-                    (size_t) (p - start)) == FAILURE) {
+                    (size_t) (p - start)
+                ) == FAILURE) {
                 return FAILURE;
             }
 
@@ -131,4 +109,37 @@ int pseudoglobals_register_configured(void)
     }
 
     return SUCCESS;
+}
+
+int pseudoglobals_registry_minit(void)
+{
+    zend_hash_init(
+        &PGLOB(registered),
+        8,
+        NULL,
+        NULL,
+        1
+    );
+
+    if (pseudoglobals_register_configured() == FAILURE) {
+        zend_hash_destroy(&PGLOB(registered));
+        return FAILURE;
+    }
+
+    return SUCCESS;
+}
+
+void pseudoglobals_registry_mshutdown(void)
+{
+    zend_hash_destroy(&PGLOB(registered));
+}
+
+unsigned int pseudoglobals_registry_count(void)
+{
+    return (unsigned int) zend_hash_num_elements(&PGLOB(registered));
+}
+
+zend_bool pseudoglobals_is_registered(zend_string *name)
+{
+    return zend_hash_exists(&PGLOB(registered), name);
 }

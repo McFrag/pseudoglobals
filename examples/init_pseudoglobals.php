@@ -2,7 +2,7 @@
 
 $_T = [
     'enter' => 'Enter',
-    'save' => 'Save',
+    'save'  => 'Save',
 ];
 
 $_CFG = [
