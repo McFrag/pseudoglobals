@@ -1,3 +1,4 @@
+# Build artifacts
 *.la
 *.lo
 *.o
@@ -6,6 +7,8 @@
 .libs/
 .deps/
 modules/
+
+# Autotools / phpize generated
 autom4te.cache/
 aclocal.m4
 compile
@@ -26,6 +29,8 @@ Makefile.global
 Makefile.objects
 missing
 run-tests.php
+
+# PHPT generated artifacts at tests root
 /tests/*.diff
 /tests/*.exp
 /tests/*.log
@@ -34,6 +39,8 @@ run-tests.php
 /tests/*.php
 /tests/*.sh
 /tests/*.tmp
+
+# Editor / IDE
 .vscode/
 .idea/
 *.swp

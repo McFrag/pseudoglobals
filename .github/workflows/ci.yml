@@ -1,18 +1,32 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4','8.0','8.1','8.2','8.3','8.4']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           tools: phpize, php-config
           coverage: none
-      - run: phpize && ./configure --enable-pseudoglobals && make -j"$(nproc)"
-      - run: make test
+
+      - name: Build
+        run: |
+          phpize
+          ./configure --enable-pseudoglobals
+          make -j"$(nproc)"
+
+      - name: Test
+        run: make test
