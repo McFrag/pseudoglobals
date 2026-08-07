@@ -3,7 +3,7 @@
 
 #include "php.h"
 
-#define PHP_PSEUDOGLOBALS_VERSION "0.3.0"
+#define PHP_PSEUDOGLOBALS_VERSION "0.4.0"
 
 extern zend_module_entry pseudoglobals_module_entry;
 #define phpext_pseudoglobals_ptr &pseudoglobals_module_entry

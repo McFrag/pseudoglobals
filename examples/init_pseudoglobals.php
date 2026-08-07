@@ -1,3 +1,12 @@
 <?php
 
-// Bootstrap execution is introduced in Commit #4.
+$_T = [
+    'enter' => 'Enter',
+    'save' => 'Save',
+];
+
+$_CFG = [
+    'environment' => 'production',
+];
+
+$_AUTH = null;

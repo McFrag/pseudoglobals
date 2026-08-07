@@ -39,9 +39,88 @@ PHP_INI_BEGIN()
         pseudoglobals_globals)
 PHP_INI_END()
 
-static zend_bool pseudoglobals_noop_callback(zend_string *name)
+static zend_bool pseudoglobals_verify_initialized(void)
 {
+    zend_string *name;
+
+    ZEND_HASH_FOREACH_STR_KEY(&PGLOB(registered), name) {
+        if (name != NULL &&
+            !zend_hash_exists(&EG(symbol_table), name)) {
+            php_error_docref(
+                NULL,
+                E_ERROR,
+                "Pseudoglobal $%s was registered but was not "
+                "initialized by \"%s\"",
+                ZSTR_VAL(name),
+                PGLOB(init_file) ? PGLOB(init_file) : "");
+            return 0;
+        }
+    } ZEND_HASH_FOREACH_END();
+
     return 1;
+}
+
+static zend_bool pseudoglobals_initialize(void)
+{
+    zend_file_handle file_handle;
+    int result;
+
+    if (PGLOB(initialized)) {
+        return 1;
+    }
+
+    /*
+     * An empty init_file is valid. It allows applications to register
+     * pseudoglobals while initializing them themselves from PHP.
+     */
+    if (PGLOB(init_file) == NULL || *PGLOB(init_file) == '\0') {
+        PGLOB(initialized) = 1;
+        return 1;
+    }
+
+    if (PGLOB(initializing)) {
+        php_error_docref(
+            NULL,
+            E_ERROR,
+            "Recursive pseudoglobal initialization detected");
+        return 0;
+    }
+
+    PGLOB(initializing) = 1;
+
+    zend_stream_init_filename(
+        &file_handle,
+        PGLOB(init_file));
+
+    result = zend_execute_scripts(
+        ZEND_REQUIRE,
+        NULL,
+        1,
+        &file_handle);
+
+    PGLOB(initializing) = 0;
+
+    if (result == FAILURE) {
+        return 0;
+    }
+
+    if (EG(exception)) {
+        return 0;
+    }
+
+    if (!pseudoglobals_verify_initialized()) {
+        return 0;
+    }
+
+    PGLOB(initialized) = 1;
+
+    return 1;
+}
+
+static zend_bool pseudoglobals_callback(zend_string *name)
+{
+    (void) name;
+    return pseudoglobals_initialize();
 }
 
 static int pseudoglobals_register_name(
@@ -96,10 +175,14 @@ static int pseudoglobals_register_name(
         return FAILURE;
     }
 
+    /*
+     * jit=1 is essential: initialization is deferred until the
+     * pseudoglobal is first used during the request.
+     */
     if (zend_register_auto_global(
             key,
-            0,
-            pseudoglobals_noop_callback) == FAILURE) {
+            1,
+            pseudoglobals_callback) == FAILURE) {
         php_error_docref(
             NULL,
             E_WARNING,
@@ -110,10 +193,6 @@ static int pseudoglobals_register_name(
         return FAILURE;
     }
 
-    /*
-     * The auto-global table keeps its own reference to the zend_string.
-     * The registry also keeps the persistent key internally.
-     */
     zend_string_release(key);
 
     return SUCCESS;

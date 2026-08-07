@@ -2,9 +2,9 @@
 
 Application-defined PHP auto-globals.
 
-## Commit 3
+## Commit 4
 
-This commit adds registration of configured pseudoglobals.
+This commit adds lazy bootstrap execution.
 
 Configuration:
 
@@ -13,26 +13,33 @@ pseudoglobals.names=_T,_CFG,_AUTH
 pseudoglobals.init_file=/srv/www/init_pseudoglobals.php
 ```
 
-`pseudoglobals.names` is parsed during module initialization. Each valid name is
-registered with Zend using `zend_register_auto_global()`, which makes the
-variable visible in function scope without a `global` declaration.
+Configured names are registered as JIT auto-globals. The first access to any
+configured pseudoglobal executes `pseudoglobals.init_file`. The bootstrap runs
+once per request and must initialize every configured pseudoglobal.
 
-Example:
+Example bootstrap:
 
 ```php
-$_T = ['enter' => 'Enter'];
+<?php
 
-function demo()
+$_T = new Translator();
+$_CFG = Config::instance();
+$_AUTH = Auth::current();
+```
+
+Application code can then use them directly from any function scope:
+
+```php
+function renderButton()
 {
-    echo $_T['enter'];
+    echo "<button>{$_T['save']}</button>";
 }
 ```
 
-The bootstrap file is not executed yet. That will be introduced in Commit #4.
+If `pseudoglobals.init_file` is empty, the extension does not bootstrap
+anything; applications may initialize registered pseudoglobals themselves.
 
-## Build
-
-For PHP 7.4:
+## Build for PHP 7.4
 
 ```sh
 phpize7.4
