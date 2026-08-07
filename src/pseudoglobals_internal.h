@@ -13,6 +13,5 @@ unsigned int pseudoglobals_registry_count(void);
 zend_bool pseudoglobals_is_registered(zend_string *name);
 
 zend_bool pseudoglobals_initialize(void);
-zend_bool pseudoglobals_callback(zend_string *name);
 
 #endif
