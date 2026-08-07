@@ -11,4 +11,4 @@ if (!extension_loaded('pseudoglobals')) {
 echo phpversion('pseudoglobals'), PHP_EOL;
 ?>
 --EXPECT--
-0.4.0
+0.1.0

@@ -7,7 +7,7 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T,BAD
+pseudoglobals.register=_T,BAD
 --FILE--
 <?php
 $_T = 'ok';

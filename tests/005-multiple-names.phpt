@@ -7,7 +7,7 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T, _CFG,	_AUTH
+pseudoglobals.register=_T, _CFG,	_AUTH
 --FILE--
 <?php
 $_T = 't';

@@ -7,11 +7,11 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T
+pseudoglobals.register=_T
 --FILE--
 <?php
-var_dump(ini_set('pseudoglobals.names', '_OTHER'));
-echo ini_get('pseudoglobals.names'), PHP_EOL;
+var_dump(ini_set('pseudoglobals.register', '_OTHER'));
+echo ini_get('pseudoglobals.register'), PHP_EOL;
 ?>
 --EXPECT--
 bool(false)

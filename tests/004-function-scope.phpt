@@ -7,7 +7,7 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T
+pseudoglobals.register=_T
 --FILE--
 <?php
 $_T = ['enter' => 'Enter'];

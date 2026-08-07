@@ -1,5 +1,5 @@
 --TEST--
-pseudoglobals bootstrap executes once on first access
+pseudoglobals bootstrap executes once on first recognition
 --SKIPIF--
 <?php
 if (!extension_loaded('pseudoglobals')) {
@@ -7,8 +7,8 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T,_CFG
-pseudoglobals.init_file=tests/fixtures/bootstrap-once.php
+pseudoglobals.register=_T,_CFG
+pseudoglobals.bootstrap=tests/fixtures/bootstrap-once.php
 --FILE--
 <?php
 var_dump(isset($GLOBALS['bootstrap_count']));
@@ -19,7 +19,7 @@ echo $_CFG['mode'], PHP_EOL;
 echo $GLOBALS['bootstrap_count'], PHP_EOL;
 ?>
 --EXPECT--
-bool(false)
+bool(true)
 Enter
 test
 1

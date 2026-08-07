@@ -7,12 +7,12 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T,_CFG,_AUTH
-pseudoglobals.init_file=/tmp/init_pseudoglobals.php
+pseudoglobals.register=_T,_CFG,_AUTH
+pseudoglobals.bootstrap=/tmp/init_pseudoglobals.php
 --FILE--
 <?php
-echo ini_get('pseudoglobals.names'), PHP_EOL;
-echo ini_get('pseudoglobals.init_file'), PHP_EOL;
+echo ini_get('pseudoglobals.register'), PHP_EOL;
+echo ini_get('pseudoglobals.bootstrap'), PHP_EOL;
 ?>
 --EXPECT--
 _T,_CFG,_AUTH

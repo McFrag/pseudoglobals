@@ -4,7 +4,6 @@
 *.o
 *.so
 *.a
-
 .libs/
 .deps/
 modules/
@@ -31,15 +30,15 @@ Makefile.objects
 missing
 run-tests.php
 
-# PHPT artifacts
-tests/*.diff
-tests/*.exp
-tests/*.log
-tests/*.mem
-tests/*.out
-tests/*.php
-tests/*.sh
-tests/*.tmp
+# PHPT generated artifacts (root tests directory only)
+/tests/*.diff
+/tests/*.exp
+/tests/*.log
+/tests/*.mem
+/tests/*.out
+/tests/*.php
+/tests/*.sh
+/tests/*.tmp
 
 # IDE / editor
 .vscode/

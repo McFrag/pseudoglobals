@@ -1,5 +1,5 @@
 --TEST--
-bootstrap initializes a pseudoglobal first accessed inside a function
+bootstrap initializes a pseudoglobal recognized inside a function
 --SKIPIF--
 <?php
 if (!extension_loaded('pseudoglobals')) {
@@ -7,8 +7,8 @@ if (!extension_loaded('pseudoglobals')) {
 }
 ?>
 --INI--
-pseudoglobals.names=_T
-pseudoglobals.init_file=tests/fixtures/bootstrap-function.php
+pseudoglobals.register=_T
+pseudoglobals.bootstrap=tests/fixtures/bootstrap-function.php
 --FILE--
 <?php
 function demo()
