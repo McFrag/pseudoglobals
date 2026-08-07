@@ -1,9 +1,10 @@
 # Build artifacts
-*.a
 *.la
 *.lo
 *.o
 *.so
+*.a
+
 .libs/
 .deps/
 modules/
@@ -30,7 +31,7 @@ Makefile.objects
 missing
 run-tests.php
 
-# PHPT generated files
+# PHPT artifacts
 tests/*.diff
 tests/*.exp
 tests/*.log
@@ -40,8 +41,8 @@ tests/*.php
 tests/*.sh
 tests/*.tmp
 
-# Editors / IDEs
+# IDE / editor
+.vscode/
+.idea/
 *.swp
 *~
-.idea/
-.vscode/

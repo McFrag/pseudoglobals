@@ -14,8 +14,12 @@ pseudoglobals.init_file=/srv/www/init_pseudoglobals.php
 ```
 
 Configured names are registered as JIT auto-globals. The first access to any
-configured pseudoglobal executes `pseudoglobals.init_file`. The bootstrap runs
-once per request and must initialize every configured pseudoglobal.
+configured pseudoglobal executes `pseudoglobals.init_file`.
+
+The bootstrap may itself assign the registered pseudoglobals. PHP 7.4 can invoke
+the auto-global callback again while compiling that bootstrap file, so the
+extension treats callbacks during initialization as expected re-entry and
+disarms them instead of recursively executing the bootstrap.
 
 Example bootstrap:
 

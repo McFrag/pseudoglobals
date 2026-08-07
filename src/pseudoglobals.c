@@ -62,7 +62,6 @@ static zend_bool pseudoglobals_verify_initialized(void)
 
 static zend_bool pseudoglobals_initialize(void)
 {
-    php_printf("INITIALIZE\n");
     zend_file_handle file_handle;
     int result;
 
@@ -77,14 +76,6 @@ static zend_bool pseudoglobals_initialize(void)
     if (PGLOB(init_file) == NULL || *PGLOB(init_file) == '\0') {
         PGLOB(initialized) = 1;
         return 1;
-    }
-
-    if (PGLOB(initializing)) {
-        php_error_docref(
-            NULL,
-            E_ERROR,
-            "Recursive pseudoglobal initialization detected");
-        return 0;
     }
 
     PGLOB(initializing) = 1;
@@ -120,8 +111,25 @@ static zend_bool pseudoglobals_initialize(void)
 
 static zend_bool pseudoglobals_callback(zend_string *name)
 {
-    php_printf("CALLBACK: %s\n", ZSTR_VAL(name));
-    return pseudoglobals_initialize();
+    (void) name;
+
+    /*
+     * While the bootstrap is being compiled/executed, its own references
+     * to registered pseudoglobals may trigger the JIT callback again.
+     * That is expected. Returning 0 here disarms the callback for that
+     * auto-global without re-entering initialization.
+     */
+    if (PGLOB(initializing)) {
+        return 0;
+    }
+
+    (void) pseudoglobals_initialize();
+
+    /*
+     * In PHP 7.4 the callback return value becomes the new "armed" state.
+     * Returning 0 disarms the JIT callback after first access.
+     */
+    return 0;
 }
 
 static int pseudoglobals_register_name(
@@ -176,10 +184,6 @@ static int pseudoglobals_register_name(
         return FAILURE;
     }
 
-    /*
-     * jit=1 is essential: initialization is deferred until the
-     * pseudoglobal is first used during the request.
-     */
     if (zend_register_auto_global(
             key,
             1,
