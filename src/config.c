@@ -22,7 +22,7 @@ PHP_INI_BEGIN()
     STD_PHP_INI_ENTRY(
         "pseudoglobals.bootstrap",
         "",
-        PHP_INI_SYSTEM,
+        PHP_INI_PERDIR,
         OnUpdateString,
         bootstrap,
         zend_pseudoglobals_globals,
