@@ -11,8 +11,8 @@ pseudoglobals.names=_T,_CFG,_AUTH
 pseudoglobals.init_file=/tmp/init_pseudoglobals.php
 --FILE--
 <?php
-echo ini_get('pseudoglobals.names'), "\n";
-echo ini_get('pseudoglobals.init_file'), "\n";
+echo ini_get('pseudoglobals.names'), PHP_EOL;
+echo ini_get('pseudoglobals.init_file'), PHP_EOL;
 ?>
 --EXPECT--
 _T,_CFG,_AUTH

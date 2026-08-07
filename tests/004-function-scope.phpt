@@ -1,0 +1,25 @@
+--TEST--
+configured pseudoglobals are visible in function scope
+--SKIPIF--
+<?php
+if (!extension_loaded('pseudoglobals')) {
+    die('skip pseudoglobals extension not loaded');
+}
+?>
+--INI--
+pseudoglobals.names=_T
+--FILE--
+<?php
+$_T = ['enter' => 'Enter'];
+
+function test_pseudoglobal()
+{
+    var_dump(isset($_T));
+    echo $_T['enter'], PHP_EOL;
+}
+
+test_pseudoglobal();
+?>
+--EXPECT--
+bool(true)
+Enter

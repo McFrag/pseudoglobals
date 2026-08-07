@@ -8,9 +8,7 @@ if (!extension_loaded('pseudoglobals')) {
 ?>
 --FILE--
 <?php
-echo extension_loaded('pseudoglobals') ? "loaded\n" : "not loaded\n";
-echo phpversion('pseudoglobals'), "\n";
+echo phpversion('pseudoglobals'), PHP_EOL;
 ?>
 --EXPECT--
-loaded
-0.2.0
+0.3.0

@@ -2,44 +2,41 @@
 
 Application-defined PHP auto-globals.
 
-## Current state
+## Commit 3
 
-This commit introduces extension configuration and request initialization state.
-It does **not** register pseudoglobals yet.
+This commit adds registration of configured pseudoglobals.
 
-### Configuration
+Configuration:
 
 ```ini
-extension=pseudoglobals.so
 pseudoglobals.names=_T,_CFG,_AUTH
 pseudoglobals.init_file=/srv/www/init_pseudoglobals.php
 ```
 
-Both settings are `PHP_INI_SYSTEM`, so they can be configured per server/vhost
-where the PHP SAPI permits system-level configuration.
+`pseudoglobals.names` is parsed during module initialization. Each valid name is
+registered with Zend using `zend_register_auto_global()`, which makes the
+variable visible in function scope without a `global` declaration.
 
-## Build (PHP 7.4)
+Example:
 
-```sh
-phpize
-./configure --enable-pseudoglobals
-make
+```php
+$_T = ['enter' => 'Enter'];
+
+function demo()
+{
+    echo $_T['enter'];
+}
 ```
 
-For a machine with several PHP versions, use the PHP 7.4 development tools
-explicitly, for example:
+The bootstrap file is not executed yet. That will be introduced in Commit #4.
+
+## Build
+
+For PHP 7.4:
 
 ```sh
 phpize7.4
 ./configure --enable-pseudoglobals --with-php-config=/usr/bin/php-config7.4
 make
-```
-
-Run the tests with:
-
-```sh
 make test
 ```
-
-The next commit will parse `pseudoglobals.names` and register those names with
-`zend_register_auto_global()`.

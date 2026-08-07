@@ -1,13 +1,23 @@
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+
 #include "../include/php_pseudoglobals.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(pseudoglobals)
+
+static void pseudoglobals_init_globals(
+    zend_pseudoglobals_globals *globals)
+{
+    globals->initialized = 0;
+    globals->initializing = 0;
+    globals->init_file = NULL;
+    globals->names = NULL;
+}
 
 PHP_INI_BEGIN()
     STD_PHP_INI_ENTRY(
@@ -17,8 +27,8 @@ PHP_INI_BEGIN()
         OnUpdateString,
         names,
         zend_pseudoglobals_globals,
-        pseudoglobals_globals
-    )
+        pseudoglobals_globals)
+
     STD_PHP_INI_ENTRY(
         "pseudoglobals.init_file",
         "",
@@ -26,31 +36,147 @@ PHP_INI_BEGIN()
         OnUpdateString,
         init_file,
         zend_pseudoglobals_globals,
-        pseudoglobals_globals
-    )
+        pseudoglobals_globals)
 PHP_INI_END()
 
-PHP_GINIT_FUNCTION(pseudoglobals)
+static zend_bool pseudoglobals_noop_callback(zend_string *name)
 {
-#if defined(COMPILE_DL_PSEUDOGLOBALS) && defined(ZTS)
-    ZEND_TSRMLS_CACHE_UPDATE();
-#endif
+    return 1;
+}
 
-    pseudoglobals_globals->names = NULL;
-    pseudoglobals_globals->init_file = NULL;
-    pseudoglobals_globals->initialized = 0;
-    pseudoglobals_globals->initializing = 0;
+static int pseudoglobals_register_name(
+    const char *name,
+    size_t len)
+{
+    zend_string *key;
+
+    while (len > 0 && (*name == ' ' || *name == '\t')) {
+        ++name;
+        --len;
+    }
+
+    while (len > 0 &&
+           (name[len - 1] == ' ' || name[len - 1] == '\t')) {
+        --len;
+    }
+
+    if (len == 0) {
+        return SUCCESS;
+    }
+
+    if (name[0] != '_') {
+        php_error_docref(
+            NULL,
+            E_WARNING,
+            "Ignoring pseudoglobal \"%.*s\": name must begin with '_'",
+            (int) len,
+            name);
+        return SUCCESS;
+    }
+
+    key = zend_string_init(name, len, 1);
+
+    if (zend_hash_exists(&PGLOB(registered), key)) {
+        php_error_docref(
+            NULL,
+            E_WARNING,
+            "Ignoring duplicate pseudoglobal \"%s\"",
+            ZSTR_VAL(key));
+        zend_string_release(key);
+        return SUCCESS;
+    }
+
+    if (zend_hash_add_empty_element(&PGLOB(registered), key) == NULL) {
+        php_error_docref(
+            NULL,
+            E_WARNING,
+            "Unable to register pseudoglobal \"%s\"",
+            ZSTR_VAL(key));
+        zend_string_release(key);
+        return FAILURE;
+    }
+
+    if (zend_register_auto_global(
+            key,
+            0,
+            pseudoglobals_noop_callback) == FAILURE) {
+        php_error_docref(
+            NULL,
+            E_WARNING,
+            "Zend rejected pseudoglobal \"%s\"",
+            ZSTR_VAL(key));
+        zend_hash_del(&PGLOB(registered), key);
+        zend_string_release(key);
+        return FAILURE;
+    }
+
+    /*
+     * The auto-global table keeps its own reference to the zend_string.
+     * The registry also keeps the persistent key internally.
+     */
+    zend_string_release(key);
+
+    return SUCCESS;
+}
+
+static int pseudoglobals_register_configured_names(void)
+{
+    const char *start;
+    const char *p;
+
+    if (PGLOB(names) == NULL || *PGLOB(names) == '\0') {
+        return SUCCESS;
+    }
+
+    start = PGLOB(names);
+
+    for (p = start; ; ++p) {
+        if (*p == ',' || *p == '\0') {
+            if (pseudoglobals_register_name(
+                    start,
+                    (size_t) (p - start)) == FAILURE) {
+                return FAILURE;
+            }
+
+            if (*p == '\0') {
+                break;
+            }
+
+            start = p + 1;
+        }
+    }
+
+    return SUCCESS;
 }
 
 PHP_MINIT_FUNCTION(pseudoglobals)
 {
+    ZEND_INIT_MODULE_GLOBALS(
+        pseudoglobals,
+        pseudoglobals_init_globals,
+        NULL)
+
     REGISTER_INI_ENTRIES();
+
+    zend_hash_init(
+        &PGLOB(registered),
+        8,
+        NULL,
+        NULL,
+        1);
+
+    if (pseudoglobals_register_configured_names() == FAILURE) {
+        return FAILURE;
+    }
+
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(pseudoglobals)
 {
+    zend_hash_destroy(&PGLOB(registered));
     UNREGISTER_INI_ENTRIES();
+
     return SUCCESS;
 }
 
@@ -60,8 +186,8 @@ PHP_RINIT_FUNCTION(pseudoglobals)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
-    PSEUDOGLOBALS_G(initialized) = 0;
-    PSEUDOGLOBALS_G(initializing) = 0;
+    PGLOB(initialized) = 0;
+    PGLOB(initializing) = 0;
 
     return SUCCESS;
 }
@@ -73,9 +199,27 @@ PHP_RSHUTDOWN_FUNCTION(pseudoglobals)
 
 PHP_MINFO_FUNCTION(pseudoglobals)
 {
+    char registered_count[32];
+
+    snprintf(
+        registered_count,
+        sizeof(registered_count),
+        "%u",
+        zend_hash_num_elements(&PGLOB(registered)));
+
     php_info_print_table_start();
-    php_info_print_table_header(2, "pseudoglobals support", "enabled");
-    php_info_print_table_row(2, "Version", PHP_PSEUDOGLOBALS_VERSION);
+    php_info_print_table_header(
+        2,
+        "pseudoglobals support",
+        "enabled");
+    php_info_print_table_row(
+        2,
+        "Version",
+        PHP_PSEUDOGLOBALS_VERSION);
+    php_info_print_table_row(
+        2,
+        "Registered names",
+        registered_count);
     php_info_print_table_end();
 
     DISPLAY_INI_ENTRIES();
@@ -91,16 +235,9 @@ zend_module_entry pseudoglobals_module_entry = {
     PHP_RSHUTDOWN(pseudoglobals),
     PHP_MINFO(pseudoglobals),
     PHP_PSEUDOGLOBALS_VERSION,
-    PHP_MODULE_GLOBALS(pseudoglobals),
-    PHP_GINIT(pseudoglobals),
-    NULL,
-    NULL,
-    STANDARD_MODULE_PROPERTIES_EX
+    STANDARD_MODULE_PROPERTIES
 };
 
 #ifdef COMPILE_DL_PSEUDOGLOBALS
-# ifdef ZTS
-ZEND_TSRMLS_CACHE_DEFINE()
-# endif
 ZEND_GET_MODULE(pseudoglobals)
 #endif
