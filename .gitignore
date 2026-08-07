@@ -1,0 +1,22 @@
+# Build artifacts
+*.o
+*.lo
+*.la
+*.so
+.libs/
+.deps/
+modules/
+autom4te.cache/
+configure
+config.log
+config.status
+Makefile
+run-tests.php
+tests/*.out
+tests/*.diff
+tests/*.exp
+tests/*.log
+.vscode/
+.idea/
+*.swp
+*~

@@ -1,0 +1,1 @@
+Add php_printf("CALLBACK: %s\n", ZSTR_VAL(name)); in pseudoglobals_callback() and php_printf("INITIALIZE\n"); at the beginning of pseudoglobals_initialize(). Rebuild and run TESTS=tests/008-bootstrap-function-scope.phpt make test.
