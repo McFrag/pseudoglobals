@@ -20,7 +20,5 @@ function test_valid()
 test_valid();
 ?>
 --EXPECTF--
-PHP Warning:  PHP Startup: Ignoring pseudoglobal "BAD": name must begin with '_' in Unknown on line 0
-
 Warning: PHP Startup: Ignoring pseudoglobal "BAD": name must begin with '_' in Unknown on line 0
 ok
