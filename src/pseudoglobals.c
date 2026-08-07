@@ -62,6 +62,7 @@ static zend_bool pseudoglobals_verify_initialized(void)
 
 static zend_bool pseudoglobals_initialize(void)
 {
+    php_printf("INITIALIZE\n");
     zend_file_handle file_handle;
     int result;
 
@@ -119,7 +120,7 @@ static zend_bool pseudoglobals_initialize(void)
 
 static zend_bool pseudoglobals_callback(zend_string *name)
 {
-    (void) name;
+    php_printf("CALLBACK: %s\n", ZSTR_VAL(name));
     return pseudoglobals_initialize();
 }
 

@@ -1,22 +1,47 @@
 # Build artifacts
-*.o
-*.lo
+*.a
 *.la
+*.lo
+*.o
 *.so
 .libs/
 .deps/
 modules/
+
+# Autotools / generated build files
 autom4te.cache/
-configure
+aclocal.m4
+compile
+config.guess
+config.h
+config.h.in
 config.log
+config.nice
 config.status
+config.sub
+configure
+install-sh
+libtool
+ltmain.sh
 Makefile
+Makefile.fragments
+Makefile.global
+Makefile.objects
+missing
 run-tests.php
-tests/*.out
+
+# PHPT generated files
 tests/*.diff
 tests/*.exp
 tests/*.log
-.vscode/
-.idea/
+tests/*.mem
+tests/*.out
+tests/*.php
+tests/*.sh
+tests/*.tmp
+
+# Editors / IDEs
 *.swp
 *~
+.idea/
+.vscode/
